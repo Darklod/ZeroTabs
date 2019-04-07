@@ -1,13 +1,8 @@
-# vueextension
+# ゼロタブ
 
 ## Project setup
 ```
 npm install
-```
-
-### Compiles and hot-reloads for development
-```
-npm run serve
 ```
 
 ### Compiles and minifies for production
@@ -15,15 +10,4 @@ npm run serve
 npm run build
 ```
 
-### Run your tests
-```
-npm run test
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+### Load dist folder to chrome extension
