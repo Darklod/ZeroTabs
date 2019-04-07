@@ -1,0 +1,16 @@
+{
+  "name": "ゼロタブ",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "browser_action": {
+    "default_title": "ゼロタブ"
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "storage"
+  ]
+}
