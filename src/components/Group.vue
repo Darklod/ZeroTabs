@@ -36,7 +36,6 @@
 </template>
 
 // TODO: addCustomGroups, OpenOnlySelected, DeleteOnlySelected, UpdateOnDrag, Export
-// TODO: FIX sameUrl -> sameId
 
 <script>
 import TabList from '../components/TabList.vue'

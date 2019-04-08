@@ -1,23 +1,29 @@
 /* global chrome */
 
-chrome.browserAction.onClicked.addListener(() => {
-  chrome.tabs.getAllInWindow(null, (tabs) => {
-    tabs = tabs.map((tab) => {
-      return {
-        id: hashCode(tab.url),
-        tabId: tab.id,
-        url: tab.url,
-        favicon: tab.favIconUrl,
-        title: tab.title,
-        timestamp: Date.now()
-      }
+chrome.browserAction.onClicked.addListener(async () => {
+  // get tabs information
+  let tabs = await new Promise(resolve => {
+    chrome.tabs.getAllInWindow(null, (tabs) => {
+      tabs = tabs.map((tab) => {
+        return {
+          id: hashCode(tab.url),
+          tabId: tab.id,
+          url: tab.url,
+          favicon: tab.favIconUrl,
+          title: tab.title,
+          timestamp: Date.now()
+        }
+      })
+      resolve(tabs)
     })
 
     chrome.tabs.create({ url: 'index.html' }, (activeTab) => {
+      // get all open tabs id
       let Ids = tabs.map((tab) => tab.tabId).filter((id) => id !== activeTab.id)
 
       let timestamp = Date.now().toString()
 
+      // check existence
       chrome.storage.sync.get(timestamp, (results) => {
         // merge old to new tabs to avoid losses
         let savedTabs = results[timestamp]
@@ -29,9 +35,7 @@ chrome.browserAction.onClicked.addListener(() => {
 
         // save to the store
         chrome.storage.sync.set({[timestamp]: tabs}, () => {
-          chrome.tabs.remove(Ids, () => {
-            // removed
-          })
+          chrome.tabs.remove(Ids, () => {}) // remove open tabs
         })
       })
     })

@@ -6,7 +6,7 @@
         <GroupList />
 
         <br />
-        <button v-on:click="addGroup">NEW GROUP</button>
+        <button class="uk-button uk-button-default" v-on:click="addGroup">NEW GROUP</button>
         <br />
 
       </div>
