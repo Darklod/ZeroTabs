@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 
 import groups from './modules/groups'
+import draganddrop from './modules/draganddrop'
 
 Vue.use(Vuex)
 
@@ -12,6 +13,7 @@ export const store = new Vuex.Store({
   actions: {},
 
   modules: {
-    groups
+    groups,
+    draganddrop
   }
 })

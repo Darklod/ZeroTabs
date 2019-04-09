@@ -52,6 +52,10 @@ const mutations = {
     let tabs = state.groups.find((g) => g.key === payload.key).tabs
     tabs.splice(payload.newIndex, 0, tabs.splice(payload.oldIndex, 1)[0])
   },
+  addTab: (state, payload) => {
+    let tabs = state.groups.find((g) => g.key === payload.key).tabs
+    tabs.splice(payload.index, 0, payload.tab)
+  },
   removeTab: (state, payload) => {
     let tabs = state.groups.find((g) => g.key === payload.key).tabs
     let index = tabs.findIndex((t) => t.id === payload.id)
@@ -64,33 +68,43 @@ const mutations = {
       let index = tabs.findIndex((t) => t.id === id)
       tabs.splice(index, 1)
     }
+  },
+  changeGroup: (state, payload) => {
+    let oldTabs = state.groups.find((g) => g.key === payload.oldKey).tabs
+    let newTabs = state.groups.find((g) => g.key === payload.newKey).tabs
+
+    let oldIndex = oldTabs.findIndex(t => t.id === payload.id)
+    let newIndex = payload.newIndex
+
+    newTabs.splice(newIndex, 0, oldTabs.splice(oldIndex, 1)[0])
   }
 }
 
 const actions = {
   getGroup: async (context, payload) => {
+    if (!chrome.storage) {
+      console.warn('The application must run as chrome extension!')
+      return
+    }
+
     let data = await new Promise(resolve => {
-      if (chrome.storage) {
-        chrome.storage.sync.get(payload.key, (results) => {
-          resolve(results)
-        })
-      } else {
-        console.warn('The application must run as chrome extension!')
-        resolve()
-      }
+      chrome.storage.sync.get(payload.key, (results) => {
+        resolve(results)
+      })
     })
+
     context.commit('addGroup', data)
   },
   getGroups: async (context) => {
+    if (!chrome.storage) {
+      console.warn('The application must run as chrome extension!')
+      return
+    }
+
     let data = await new Promise(resolve => {
-      if (chrome.storage) {
-        chrome.storage.sync.get(null, (results) => {
-          resolve(results)
-        })
-      } else {
-        console.warn('The application must run as chrome extension!')
-        resolve()
-      }
+      chrome.storage.sync.get(null, (results) => {
+        resolve(results)
+      })
     })
 
     let groups = []
@@ -99,72 +113,76 @@ const actions = {
         groups.push({ key, tabs: [...data[key]] })
       }
     }
+
     context.commit('setGroups', groups)
   },
   saveGroup: async (context, payload) => {
+    if (!chrome.storage) {
+      console.warn('The application must run as chrome extension!')
+      return
+    }
+
     await new Promise(resolve => {
-      if (chrome.storage) {
-        chrome.storage.sync.set({[payload.key]: payload.tabs}, () => {
-          resolve()
-        })
-      } else {
-        console.warn('The application must run as chrome extension!')
+      chrome.storage.sync.set({[payload.key]: payload.tabs}, () => {
         resolve()
-      }
+      })
     })
+
     context.commit('addGroup', payload)
   },
   removeGroup: async (context, payload) => {
+    if (!chrome.storage) {
+      console.warn('The application must run as chrome extension!')
+      return
+    }
+
     await new Promise(resolve => {
-      if (chrome.storage) {
-        chrome.storage.sync.remove([payload.key], () => {
-          resolve()
-        })
-      } else {
-        console.warn('The application must run as chrome extension!')
+      chrome.storage.sync.remove([payload.key], () => {
         resolve()
-      }
-    })
-    context.commit('removeGroup', payload)
-  },
-  moveTab: async (context, payload) => {
-    /* let {indexA, indexB, data} = await new Promise(resolve => {
-      chrome.storage.sync.get(null, (results) => {
-        let indexA = results[payload.keyA].findIndex((t) => t.id === payload.idA)
-        let indexB = results[payload.keyB].findIndex((t) => t.id === payload.idB)
-        resolve(indexA, indexB, results)
       })
     })
-    if (payload.keyA === payload.keyB) {
-      let tabs = data[payload.keyA]
 
-    } else {
-      let tabsA = data[payload.keyA]
-      let tabsB = data[payload.keyB]
-      // DON'T SWITCH ....
-      // tabsA.push(indexA, )
-    } */
+    context.commit('removeGroup', payload)
+  },
+  addTab: async (context, payload) => {
+    if (!chrome.storage) {
+      console.warn('The application must run as chrome extension!')
+      return
+    }
 
-    // MOVE IF SAME GROUP
-
-    // fetch and return newTabs
-    let {tabs, tabIndex} = await new Promise(resolve => {
-      if (chrome.storage) {
-        chrome.storage.sync.get(payload.key, (results) => {
-          let tabs = results[payload.key]
-          let tabIndex = tabs.findIndex((t) => t.id.toString() === payload.id)
-
-          tabs.splice(payload.newIndex, 0, tabs.splice(tabIndex, 1)[0])
-
-          resolve({tabs, tabIndex})
-        })
-      } else {
-        console.warn('The application must run as chrome extension!')
-        resolve()
-      }
+    let data = await new Promise(resolve => {
+      chrome.storage.sync.get(payload.key, (results) => {
+        resolve(results[payload.key])
+      })
     })
 
-    // save tabs in the storage
+    data.splice(payload.index || 0, 0, payload.tab)
+
+    await new Promise(resolve => {
+      chrome.storage.sync.set({[payload.key]: data}, (results) => {
+        resolve(results)
+      })
+    })
+
+    context.commit('addTab', payload)
+  },
+  moveTab: async (context, payload) => {
+    if (!chrome.storage) {
+      console.warn('The application must run as chrome extension!')
+      return
+    }
+
+    let {tabs, tabIndex} = await new Promise(resolve => {
+      chrome.storage.sync.get(payload.key, (results) => {
+        let tabs = results[payload.key]
+        let tabIndex = tabs.findIndex((t) => t.id === payload.id)
+
+        tabs.splice(payload.newIndex, 0, tabs.splice(tabIndex, 1)[0])
+
+        resolve({tabs, tabIndex})
+      })
+    })
+
     await new Promise(resolve => {
       if (chrome.storage) {
         chrome.storage.sync.set({[payload.key]: tabs}, (results) => {
@@ -179,57 +197,75 @@ const actions = {
     context.commit('moveTab', {key: payload.key, newIndex: payload.newIndex, oldIndex: tabIndex})
   },
   removeTab: async (context, payload) => {
+    if (!chrome.storage) {
+      console.warn('The application must run as chrome extension!')
+      return
+    }
+
     let data = await new Promise(resolve => {
-      if (chrome.storage) {
-        chrome.storage.sync.get(payload.key, (results) => {
-          let index = results[payload.key].findIndex((t) => t.id === payload.id)
-          results[payload.key].splice(index, 1)
-          resolve(results[payload.key])
-        })
-      } else {
-        console.warn('The application must run as chrome extension!')
-        resolve()
-      }
+      chrome.storage.sync.get(payload.key, (results) => {
+        let index = results[payload.key].findIndex((t) => t.id === payload.id)
+        results[payload.key].splice(index, 1)
+        resolve(results[payload.key])
+      })
     })
 
     data = await new Promise(resolve => {
-      if (chrome.storage) {
-        chrome.storage.sync.set({[payload.key]: data}, (results) => {
-          resolve(results)
-        })
-      } else {
-        console.warn('The application must run as chrome extension!')
-        resolve()
-      }
+      chrome.storage.sync.set({[payload.key]: data}, (results) => {
+        resolve(results)
+      })
     })
 
     context.commit('removeTab', payload)
   },
   removeTabs: async (context, payload) => {
+    if (!chrome.storage) {
+      console.warn('The application must run as chrome extension!')
+      return
+    }
+
     let newTabs = await new Promise(resolve => {
-      if (chrome.storage) {
-        chrome.storage.sync.get(payload.key, (results) => {
-          results = results[payload.key].filter((t) => payload.ids.indexOf(t.id) === -1)
-          resolve(results)
-        })
-      } else {
-        console.warn('The application must run as chrome extension!')
-        resolve()
-      }
+      chrome.storage.sync.get(payload.key, (results) => {
+        results = results[payload.key].filter((t) => payload.ids.indexOf(t.id) === -1)
+        resolve(results)
+      })
     })
 
     await new Promise(resolve => {
-      if (chrome.storage) {
-        chrome.storage.sync.set({[payload.key]: newTabs}, (results) => {
-          resolve(results)
-        })
-      } else {
-        console.warn('The application must run as chrome extension!')
-        resolve()
-      }
+      chrome.storage.sync.set({[payload.key]: newTabs}, (results) => {
+        resolve(results)
+      })
     })
 
     context.commit('removeTabs', payload)
+  },
+  changeGroup: async (context, payload) => {
+    if (!chrome.storage) {
+      console.warn('The application must run as chrome extension!')
+      return
+    }
+
+    let results = await new Promise(resolve => {
+      chrome.storage.sync.get(null, (results) => {
+        let oldTabs = results[payload.oldKey]
+        let newTabs = results[payload.newKey]
+
+        let oldIndex = oldTabs.findIndex(t => t.id === payload.id)
+        let newIndex = payload.newIndex
+
+        newTabs.splice(newIndex, 0, oldTabs.splice(oldIndex, 1)[0])
+
+        resolve(results)
+      })
+    })
+
+    await new Promise(resolve => {
+      chrome.storage.sync.set(results, () => {
+        resolve()
+      })
+    })
+
+    context.commit('changeGroup', payload)
   }
 }
 

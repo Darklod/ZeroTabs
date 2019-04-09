@@ -61,26 +61,39 @@ export default {
     this.title = 'Untitled'
   },
   mounted() {
-    let ref = this.$refs[this.getKey.toString()]
-    let $el = ref.$el
+    let $el = this.$refs[this.getKey.toString()].$el
 
     // Change position between groups
     UIkit.util.on($el, 'added', (e, options, item) => {
-      console.log('added triggered', [e, options, item])
-      // different groups
-      let newGroupKey = e.target.id
-      console.log({'oldKey': this.getKey, 'newKey': newGroupKey})
-      ////// ??????????? ///////
-      // update
+      let newKey = e.target.id // new group key
+      let newIndex = [...$el.children].findIndex((child) => child.id === item.id)
+      this.$store.dispatch('add', {newKey, newIndex})
     });
+
+    UIkit.util.on($el, 'removed', (e, options, item) => {
+      let oldKey = e.target.id // old group key
+      let tabId = parseInt(item.id)
+      this.$store.dispatch('remove', {oldKey, tabId})
+    })
+
+    UIkit.util.on($el, 'stop', (e, options, item) => {
+      if (this.move.added && this.move.removed) {
+        this.$store.dispatch('changeGroup', {
+          oldKey: this.move.oldKey,
+          newKey: this.move.newKey,
+          newIndex: this.move.newIndex,
+          id: this.move.tabId
+        })
+        this.$store.dispatch('reset')
+      }
+    })
 
     // Change position in the same group
     UIkit.util.on($el, 'moved', (e, options, item) => {
-      let id = item.id
       let key = e.target.id
-      let newIndex = [...ref.$el.children].findIndex((child) => child.id === id)
+      let newIndex = [...$el.children].findIndex((child) => child.id === item.id)
 
-      this.$store.dispatch('moveTab', { key, id, newIndex })
+      this.$store.dispatch('moveTab', { key, id: parseInt(item.id), newIndex })
     });
   },
   computed: {
@@ -102,6 +115,9 @@ export default {
     },
     getKey() {
       return this.groupKey
+    },
+    move() {
+      return this.$store.getters.getMove
     }
   },
   methods: {

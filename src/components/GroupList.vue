@@ -12,11 +12,6 @@ export default {
   components: {
     Group
   },
-  data: () => {
-    return {
-      groups: []
-    }
-  },
   mounted() {
     this.$store.dispatch('getGroups')
   },
