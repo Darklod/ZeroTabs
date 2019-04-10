@@ -15,7 +15,8 @@
         <ul class="uk-iconnav">
           <span class="uk-icon icon-button"
                 uk-icon="download"
-                uk-tooltip="title: Export Urls; pos: top-center; delay: 200"/>
+                uk-tooltip="title: Export Urls; pos: top-center; delay: 200"
+                @click="download"/>
           <span class="uk-icon icon-button"
                 uk-icon="forward"
                 uk-tooltip="title: Restore All; pos: top-center; delay: 200"
@@ -58,7 +59,7 @@ export default {
   },
   beforeMount() {
     // fetch title
-    this.title = 'Untitled'
+    this.title = '部門の名前'
   },
   mounted() {
     let $el = this.$refs[this.getKey.toString()].$el
@@ -151,6 +152,14 @@ export default {
     },
     showEdit() {
       this.edit = true
+    },
+    download() {
+      let urls = this.group.tabs.map(t => t.url).join('\n')
+      console.log(urls)
+      let blob = new Blob([urls], {type: "text/plain"});
+      let url = URL.createObjectURL(blob);
+
+      chrome.downloads.download({ url: url, filename: this.title.concat('.txt') })
     }
   }
 }
