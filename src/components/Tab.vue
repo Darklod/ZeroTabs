@@ -7,7 +7,7 @@
     <div class="uk-card uk-card-default uk-card-body uk-card-small tab" :ref="id + '-bg'">
       <div class="uk-grid-small uk-flex-middle" uk-grid>
         <div class="uk-width-auto">
-          <!--<img alt="icon" :src="this.tab.favicon" width="16" height="16"/>-->
+          <img alt="icon" :src="this.tab.favicon" width="16" height="16"/>
         </div>
         <div class="uk-width-expand">
           <div class="uk-text-truncate" :ref="id + '-text'" @dblclick="restoreTab">

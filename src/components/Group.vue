@@ -47,7 +47,7 @@
   </div>
 </template>
 
-// TODO: addCustomGroups, OpenOnlySelected, DeleteOnlySelected
+// TODO: Open and Remove Multiple Tabs
 
 <script>
 import TabList from '../components/TabList.vue'
