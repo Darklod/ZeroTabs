@@ -1,5 +1,3 @@
-/* global chrome */
-
 chrome.browserAction.onClicked.addListener(async () => {
   // get tabs information
   let tabs = await new Promise(resolve => {
@@ -33,13 +31,29 @@ chrome.browserAction.onClicked.addListener(async () => {
         // remove duplicates
         tabs = getUnique(tabs, 'id')
 
+        let value = {
+          key: timestamp,
+          tabs: tabs,
+          title: 'untitled',
+          color: 'default'
+        }
+
         // save to the store
-        chrome.storage.sync.set({[timestamp]: tabs}, () => {
+        chrome.storage.sync.set({[timestamp]: value}, () => {
           chrome.tabs.remove(Ids, () => {}) // remove open tabs
         })
       })
     })
   })
+})
+
+chrome.contextMenus.create({
+  title: "ゼロタブ",
+  contexts: ["all"]
+})
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  chrome.tabs.create({ url: 'index.html' })
 })
 
 let hashCode = (str) => {

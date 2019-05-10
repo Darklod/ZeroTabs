@@ -2,29 +2,40 @@
   <div>
     <div class="uk-grid" uk-grid>
       <div class="uk-width-expand uk-first-column">
-        <div v-if="!edit" @dblclick="showEdit" class="uk-text uk-text-large uk-text-capitalize">{{title}}</div>
+        <div v-if="!edit"
+             @dblclick="showEdit"
+             class="uk-text uk-text-large uk-text-capitalize">
+             {{group.title || 'Untitled'}}
+        </div>
         <form v-else @submit="editTitle">
           <input class="uk-input uk-form-small"
                  v-bind:class="{ 'uk-form-danger': hasError }"
+                 ref="editTitle"
                  @keyup="onChangeHandler"
-                 placeholder="Title"
-                 v-model="title">
+                 placeholder="題を入力"
+                 v-model="newTitle">
         </form>
       </div>
       <div class="uk-width-auto">
         <ul class="uk-iconnav">
-          <span class="uk-icon icon-button"
+          <li>
+            <span class="uk-icon icon-button"
                 uk-icon="download"
                 uk-tooltip="title: Export Urls; pos: top-center; delay: 200"
                 @click="download"/>
-          <span class="uk-icon icon-button"
+          </li>
+          <li>
+            <span class="uk-icon icon-button"
                 uk-icon="forward"
                 uk-tooltip="title: Restore All; pos: top-center; delay: 200"
                 @click="restoreTabs"/>
-          <span class="uk-icon icon-button"
+          </li>
+          <li>
+            <span class="uk-icon icon-button"
                 uk-icon="trash"
                 uk-tooltip="title: Delete Group; pos: top-center; delay: 200"
                 @click="removeGroup" />
+          </li>
         </ul>
       </div>
     </div>
@@ -36,7 +47,7 @@
   </div>
 </template>
 
-// TODO: addCustomGroups, OpenOnlySelected, DeleteOnlySelected, UpdateOnDrag, Export
+// TODO: addCustomGroups, OpenOnlySelected, DeleteOnlySelected
 
 <script>
 import TabList from '../components/TabList.vue'
@@ -53,13 +64,9 @@ export default {
   data: () => {
     return {
       edit: false,
-      title: 'Untitled',
-      hasError: false
+      hasError: false,
+      newTitle: ''
     }
-  },
-  beforeMount() {
-    // fetch title
-    this.title = '部門の名前'
   },
   mounted() {
     let $el = this.$refs[this.getKey.toString()].$el
@@ -136,33 +143,45 @@ export default {
 
       if (!this.hasError) {
         this.edit = false
-        // dispatch
+        this.$store.dispatch('setTitle', { key: this.groupKey, title: this.newTitle })
       }
     },
-    onChangeHandler() {
-      if (this.title === '') {
+    onChangeHandler(e) {
+      if (e.keyCode == 27) {
+        this.edit = false
+        return
+      }
+
+      if (this.newTitle === '') {
         this.hasError = true
         // title required
-      } else if (this.title.length > 12) {
+        console.log('title required')
+      } else if (this.newTitle.length > 12) {
         this.hasError = true
         // title must be less than 12 characters long
+        console.log('title must be less than 12 characters long')
       } else {
         this.hasError = false
       }
     },
     showEdit() {
       this.edit = true
+      this.newTitle = this.group.title
+      this.$nextTick(function() {   // function scope needed
+        this.$refs["editTitle"].focus()
+      });
     },
     download() {
       let urls = this.group.tabs.map(t => t.url).join('\n')
-      console.log(urls)
+      
       let blob = new Blob([urls], {type: "text/plain"});
       let url = URL.createObjectURL(blob);
 
-      chrome.downloads.download({ url: url, filename: this.title.concat('.txt') })
+      chrome.downloads.download({ url: url, filename: this.group.title.concat('.txt') })
     }
   }
 }
+
 </script>
 
 <style scoped>

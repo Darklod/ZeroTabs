@@ -5,6 +5,10 @@
   "browser_action": {
     "default_title": "ゼロタブ"
   },
+  "icons": { 
+    "32": "favicon-32x32.png",
+    "16": "favicon-16x16.png"
+  },
   "background": {
     "scripts": ["background.js"]
   },
@@ -12,6 +16,7 @@
     "tabs",
     "activeTab",
     "storage",
-    "downloads"
+    "downloads",
+    "contextMenus"
   ]
 }
